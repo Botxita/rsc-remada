@@ -242,7 +242,7 @@ export default function App({ initialSurfers, initialSessions, initialTimesMap }
           <button
             key={t}
             onClick={() => setTab(t)}
-            className={`flex-1 py-3 text-sm font-bold uppercase tracking-wider transition-colors ${
+            className={`flex-1 py-5 text-lg font-bold uppercase tracking-wider transition-colors ${
               tab === t ? "border-b-2 border-black text-black" : "text-gray-400 hover:text-black"
             }`}
             style={{ fontFamily: "'Barlow Condensed', sans-serif" }}
@@ -327,17 +327,17 @@ export default function App({ initialSurfers, initialSessions, initialTimesMap }
             {/* 3 action buttons */}
             <div className="flex gap-2 mb-4">
               <button onClick={() => setShowAddSession(true)}
-                className="flex-1 py-2.5 border-2 border-black rounded-xl text-sm font-bold uppercase tracking-wide hover:bg-black hover:text-white transition-all"
+                className="flex-1 py-1.5 border border-black rounded-lg text-xs font-semibold uppercase tracking-wide hover:bg-black hover:text-white transition-all"
                 style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
                 + Sesión
               </button>
               <button onClick={() => setShowAddSurfer(true)}
-                className="flex-1 py-2.5 border-2 border-black rounded-xl text-sm font-bold uppercase tracking-wide hover:bg-black hover:text-white transition-all"
+                className="flex-1 py-1.5 border border-black rounded-lg text-xs font-semibold uppercase tracking-wide hover:bg-black hover:text-white transition-all"
                 style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
                 + Surfer
               </button>
               <button onClick={() => { setDeleteFilter(""); setConfirmDelete(null); setShowDeleteSurfer(true); }}
-                className="flex-1 py-2.5 border-2 border-red-300 text-red-500 rounded-xl text-sm font-bold uppercase tracking-wide hover:bg-red-500 hover:text-white transition-all"
+                className="flex-1 py-1.5 border border-red-300 text-red-500 rounded-lg text-xs font-semibold uppercase tracking-wide hover:bg-red-500 hover:text-white transition-all"
                 style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
                 − Surfer
               </button>
