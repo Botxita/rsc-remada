@@ -21,12 +21,12 @@ export default function App({ initialSurfers, initialSessions, initialTimesMap }
     initialSessions[initialSessions.length - 1]?.name ?? ""
   );
   const [filter, setFilter] = useState("");
+  const [saving, setSaving] = useState(false);
 
-  // Modal state
+  // Time modal (sesión only)
   const [modal, setModal] = useState<{ surferName: string; sessionName: string } | null>(null);
   const [mMin, setMMin] = useState("");
   const [mSec, setMSec] = useState("");
-  const [saving, setSaving] = useState(false);
 
   // Add session modal
   const [showAddSession, setShowAddSession] = useState(false);
@@ -35,6 +35,15 @@ export default function App({ initialSurfers, initialSessions, initialTimesMap }
   // Add surfer modal
   const [showAddSurfer, setShowAddSurfer] = useState(false);
   const [newSurferName, setNewSurferName] = useState("");
+
+  // Delete surfer modal
+  const [showDeleteSurfer, setShowDeleteSurfer] = useState(false);
+  const [deleteFilter, setDeleteFilter] = useState("");
+  const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
+
+  // Rename surfer modal
+  const [renamingSurfer, setRenamingSurfer] = useState<string | null>(null);
+  const [renameVal, setRenameVal] = useState("");
 
   const secRef = useRef<HTMLInputElement>(null);
   const minRef = useRef<HTMLInputElement>(null);
@@ -133,6 +142,55 @@ export default function App({ initialSurfers, initialSessions, initialTimesMap }
     setShowAddSurfer(false);
   }
 
+  // ── Delete surfer ─────────────────────────────────────
+  async function deleteSurfer(name: string) {
+    setSaving(true);
+    try {
+      await fetch("/api/surfers", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name }),
+      });
+      setSurfers((prev) => prev.filter((s) => s.name !== name));
+      setTimesMap((prev) => {
+        const next = { ...prev };
+        delete next[name];
+        return next;
+      });
+      setConfirmDelete(null);
+      setShowDeleteSurfer(false);
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  // ── Rename surfer ─────────────────────────────────────
+  async function renameSurfer() {
+    if (!renamingSurfer || !renameVal.trim()) return;
+    setSaving(true);
+    try {
+      await fetch("/api/surfers", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ oldName: renamingSurfer, newName: renameVal.trim() }),
+      });
+      const newName = renameVal.trim();
+      setSurfers((prev) => prev.map((s) => s.name === renamingSurfer ? { ...s, name: newName } : s));
+      setTimesMap((prev) => {
+        const next = { ...prev };
+        if (next[renamingSurfer]) {
+          next[newName] = next[renamingSurfer];
+          delete next[renamingSurfer];
+        }
+        return next;
+      });
+      setRenamingSurfer(null);
+      setRenameVal("");
+    } finally {
+      setSaving(false);
+    }
+  }
+
   // ── Computed ──────────────────────────────────────────
   const filteredSurfers = surfers.filter((s) =>
     s.name.toLowerCase().includes(filter.toLowerCase())
@@ -145,6 +203,10 @@ export default function App({ initialSurfers, initialSessions, initialTimesMap }
     })
     .filter((s) => s.best !== null)
     .sort((a, b) => (a.best ?? 0) - (b.best ?? 0));
+
+  const filteredForDelete = surfers.filter((s) =>
+    s.name.toLowerCase().includes(deleteFilter.toLowerCase())
+  );
 
   // ── Delta label ───────────────────────────────────────
   function DeltaLabel({ delta }: { delta: number | null }) {
@@ -162,18 +224,10 @@ export default function App({ initialSurfers, initialSessions, initialTimesMap }
 
       {/* HEADER */}
       <div className="border-b-2 border-black px-4 py-3">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 800, fontSize: 26, letterSpacing: 1, textTransform: "uppercase", margin: 0 }}>
-              🏄 RSC Remada
-            </h1>
-            <p className="text-xs text-gray-500 tracking-widest uppercase mt-0.5">Evaluación 100m</p>
-          </div>
-          <div className="flex gap-2">
-            <button onClick={() => setShowAddSurfer(true)} className="text-xs border border-gray-300 rounded-full px-3 py-1.5 font-semibold hover:border-black transition-colors">+ Surfer</button>
-            <button onClick={() => setShowAddSession(true)} className="text-xs border border-gray-300 rounded-full px-3 py-1.5 font-semibold hover:border-black transition-colors">+ Sesión</button>
-          </div>
-        </div>
+        <h1 style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 800, fontSize: 26, letterSpacing: 1, textTransform: "uppercase", margin: 0 }}>
+          🏄 RSC Remada
+        </h1>
+        <p className="text-xs text-gray-500 tracking-widest uppercase mt-0.5">Evaluación 100m</p>
       </div>
 
       {/* TABS */}
@@ -194,7 +248,7 @@ export default function App({ initialSurfers, initialSessions, initialTimesMap }
 
       <div className="p-3">
 
-        {/* ── TAB: TABLA ── */}
+        {/* ── TAB: TABLA (solo lectura) ── */}
         {tab === "tabla" && (
           <>
             <input
@@ -225,7 +279,7 @@ export default function App({ initialSurfers, initialSessions, initialTimesMap }
                     const best = getBestTime(surfer.name, timesMap);
                     return (
                       <tr key={surfer.id} className={fi % 2 === 0 ? "bg-white" : "bg-gray-50/50"}>
-                        <td className={`px-3 py-2 font-semibold text-sm border-b border-gray-100 whitespace-nowrap sticky left-0 z-10 ${fi % 2 === 0 ? "bg-white" : "bg-gray-50/50"}`}>
+                        <td className={`px-3 py-2 font-semibold text-sm border-b border-gray-100 whitespace-nowrap sticky left-0 z-10 text-black ${fi % 2 === 0 ? "bg-white" : "bg-gray-50/50"}`}>
                           {surfer.name}
                         </td>
                         {sessionNames.map((sess) => {
@@ -235,20 +289,17 @@ export default function App({ initialSurfers, initialSessions, initialTimesMap }
                           const isMT = sec !== null && sec === best;
                           return (
                             <td key={sess} className="px-1 py-2 text-center border-b border-gray-100">
-                              <button
-                                onClick={() => openModal(surfer.name, sess)}
-                                className={`inline-flex items-center justify-center px-2 py-1 rounded text-xs font-semibold transition-all hover:scale-105 ${
-                                  t
-                                    ? isMT
-                                      ? "bg-amber-50 border border-amber-300 text-amber-800"
-                                      : "bg-gray-100 border border-gray-200 text-gray-800"
-                                    : "text-gray-300 hover:text-gray-500 hover:bg-gray-50 border border-transparent"
-                                }`}
-                              >
-                                {t ?? "·"}
-                                {t && <DeltaLabel delta={delta} />}
-                                {isMT && <span className="ml-1 text-amber-500 text-xs">★</span>}
-                              </button>
+                              {t ? (
+                                <span className={`inline-flex items-center justify-center px-2 py-1 rounded text-xs font-semibold ${
+                                  isMT ? "bg-amber-50 border border-amber-300 text-amber-800" : "bg-gray-100 border border-gray-200 text-gray-800"
+                                }`}>
+                                  {t}
+                                  <DeltaLabel delta={delta} />
+                                  {isMT && <span className="ml-1 text-amber-500 text-xs">★</span>}
+                                </span>
+                              ) : (
+                                <span className="text-gray-200 text-xs">·</span>
+                              )}
                             </td>
                           );
                         })}
@@ -261,7 +312,6 @@ export default function App({ initialSurfers, initialSessions, initialTimesMap }
                 </tbody>
               </table>
             </div>
-            {/* MT legend */}
             <p className="text-xs text-gray-400 mt-3 px-1">
               <span className="text-amber-500 font-bold">★ MT</span> = Mejor Tiempo Personal · <span className="text-green-600 font-semibold">▼</span> mejoró · <span className="text-red-500 font-semibold">▲</span> empeoró (vs. sesión anterior)
             </p>
@@ -271,6 +321,25 @@ export default function App({ initialSurfers, initialSessions, initialTimesMap }
         {/* ── TAB: SESIÓN ── */}
         {tab === "sesion" && (
           <>
+            {/* 3 action buttons */}
+            <div className="flex gap-2 mb-4">
+              <button onClick={() => setShowAddSession(true)}
+                className="flex-1 py-2.5 border-2 border-black rounded-xl text-sm font-bold uppercase tracking-wide hover:bg-black hover:text-white transition-all"
+                style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
+                + Sesión
+              </button>
+              <button onClick={() => setShowAddSurfer(true)}
+                className="flex-1 py-2.5 border-2 border-black rounded-xl text-sm font-bold uppercase tracking-wide hover:bg-black hover:text-white transition-all"
+                style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
+                + Surfer
+              </button>
+              <button onClick={() => { setDeleteFilter(""); setConfirmDelete(null); setShowDeleteSurfer(true); }}
+                className="flex-1 py-2.5 border-2 border-red-300 text-red-500 rounded-xl text-sm font-bold uppercase tracking-wide hover:bg-red-500 hover:text-white transition-all"
+                style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
+                − Surfer
+              </button>
+            </div>
+
             {/* Session selector */}
             <div className="mb-4">
               <p className="text-xs text-gray-400 uppercase tracking-widest mb-2">Sesión activa</p>
@@ -280,9 +349,7 @@ export default function App({ initialSurfers, initialSessions, initialTimesMap }
                     key={s}
                     onClick={() => setActiveSession(s)}
                     className={`px-3 py-1.5 rounded-full text-sm font-semibold border transition-all ${
-                      s === activeSession
-                        ? "bg-black text-white border-black"
-                        : "border-gray-300 text-gray-600 hover:border-black"
+                      s === activeSession ? "bg-black text-white border-black" : "border-gray-300 text-gray-600 hover:border-black"
                     }`}
                   >
                     {s}
@@ -291,38 +358,36 @@ export default function App({ initialSurfers, initialSessions, initialTimesMap }
               </div>
             </div>
 
-            <p className="text-xs text-gray-500 mb-3">
-              Tocá un nombre para registrar su tiempo en <strong>{activeSession}</strong>
-            </p>
-
+            {/* Surfer list — names only, tap to register time */}
             <div className="flex flex-col gap-2">
               {surfers.map((surfer) => {
-                const t = timesMap[surfer.name]?.[activeSession];
-                const delta = getDelta(surfer.name, activeSession, sessionNames, timesMap);
-                const best = getBestTime(surfer.name, timesMap);
-                const sec = t ? timeToSec(t) : null;
-                const isMT = sec !== null && sec === best;
+                const hasTime = !!timesMap[surfer.name]?.[activeSession];
                 return (
-                  <button
-                    key={surfer.id}
-                    onClick={() => openModal(surfer.name, activeSession)}
-                    className={`flex items-center px-4 py-3 rounded-xl border text-left transition-all active:scale-98 ${
-                      t ? "border-gray-300 bg-white" : "border-gray-100 bg-gray-50"
-                    }`}
-                  >
-                    <span className={`flex-1 font-semibold text-base ${t ? "text-black" : "text-gray-500"}`}>
-                      {surfer.name}
-                    </span>
-                    {t ? (
-                      <span className="flex items-center gap-1 font-bold text-base">
-                        {isMT && <span className="text-amber-500 text-sm">★</span>}
-                        {t}
-                        <DeltaLabel delta={delta} />
+                  <div key={surfer.id} className="flex items-center gap-2">
+                    {/* Name tap → rename */}
+                    <button
+                      onClick={() => { setRenamingSurfer(surfer.name); setRenameVal(surfer.name); }}
+                      className="text-left px-3 py-3 rounded-xl border border-gray-100 bg-gray-50 text-gray-500 text-sm font-medium hover:border-gray-300 transition-all min-w-0 flex-shrink-0"
+                      style={{ maxWidth: 36 }}
+                      title="Editar nombre"
+                    >
+                      ✏️
+                    </button>
+                    {/* Time tap → register */}
+                    <button
+                      onClick={() => openModal(surfer.name, activeSession)}
+                      className={`flex-1 flex items-center px-4 py-3 rounded-xl border text-left transition-all ${
+                        hasTime ? "border-black bg-white" : "border-gray-200 bg-gray-50"
+                      }`}
+                    >
+                      <span className={`flex-1 font-semibold text-base ${hasTime ? "text-black" : "text-gray-400"}`}>
+                        {surfer.name}
                       </span>
-                    ) : (
-                      <span className="text-xs text-gray-300">sin tiempo</span>
-                    )}
-                  </button>
+                      <span className={`text-xs font-medium ${hasTime ? "text-green-600" : "text-gray-300"}`}>
+                        {hasTime ? "✓ registrado" : "tap para registrar"}
+                      </span>
+                    </button>
+                  </div>
                 );
               })}
             </div>
@@ -335,23 +400,18 @@ export default function App({ initialSurfers, initialSessions, initialTimesMap }
             <p className="text-xs text-gray-500 mb-4 uppercase tracking-widest">
               Ranking general · mejor tiempo histórico · {rankingData.length} surfers
             </p>
-
             {rankingData.length === 0 && (
               <p className="text-gray-400 text-sm text-center py-8">No hay tiempos registrados aún.</p>
             )}
-
             {rankingData.map((s, rank) => {
               const medal = rank === 0 ? "🥇" : rank === 1 ? "🥈" : rank === 2 ? "🥉" : null;
               return (
-                <div
-                  key={s.id}
-                  className={`flex items-center px-4 py-3 mb-2 rounded-xl border ${
-                    rank === 0 ? "border-amber-300 bg-amber-50" :
-                    rank === 1 ? "border-gray-300 bg-gray-50" :
-                    rank === 2 ? "border-orange-200 bg-orange-50/50" :
-                    "border-gray-100 bg-white"
-                  }`}
-                >
+                <div key={s.id} className={`flex items-center px-4 py-3 mb-2 rounded-xl border ${
+                  rank === 0 ? "border-amber-300 bg-amber-50" :
+                  rank === 1 ? "border-gray-300 bg-gray-50" :
+                  rank === 2 ? "border-orange-200 bg-orange-50/50" :
+                  "border-gray-100 bg-white"
+                }`}>
                   <span className="w-8 text-center font-bold text-sm text-gray-400" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
                     {medal ?? `#${rank + 1}`}
                   </span>
@@ -362,27 +422,20 @@ export default function App({ initialSurfers, initialSessions, initialTimesMap }
                 </div>
               );
             })}
-
-            <p className="text-xs text-gray-400 mt-3">
-              ★ Se usa el mejor tiempo de todas las sesiones para el ranking.
-            </p>
+            <p className="text-xs text-gray-400 mt-3">★ MT = mejor tiempo de todas las sesiones.</p>
           </>
         )}
       </div>
 
-      {/* ── MODAL: tiempo ── */}
+      {/* ── MODAL: registrar/editar tiempo ── */}
       {modal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => setModal(null)}>
           <div className="bg-white rounded-2xl p-6 w-full max-w-xs shadow-2xl" onClick={(e) => e.stopPropagation()}>
             <p className="font-bold text-xl mb-0.5" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>{modal.surferName}</p>
             <p className="text-sm text-gray-400 mb-5">{modal.sessionName} · 100m</p>
-
             <div className="flex items-center gap-3 mb-5 justify-center">
               <div className="flex flex-col items-center">
-                <input
-                  ref={minRef}
-                  type="number" min={0} max={9}
-                  value={mMin}
+                <input ref={minRef} type="number" min={0} max={9} value={mMin}
                   onChange={(e) => { setMMin(e.target.value); if (e.target.value.length >= 1) secRef.current?.focus(); }}
                   placeholder="1"
                   className="w-20 text-center text-4xl font-bold border-2 border-gray-200 rounded-xl py-2 outline-none focus:border-black transition-colors"
@@ -392,10 +445,7 @@ export default function App({ initialSurfers, initialSessions, initialTimesMap }
               </div>
               <span className="text-3xl font-bold text-gray-300 pb-4">:</span>
               <div className="flex flex-col items-center">
-                <input
-                  ref={secRef}
-                  type="number" min={0} max={59}
-                  value={mSec}
+                <input ref={secRef} type="number" min={0} max={59} value={mSec}
                   onChange={(e) => setMSec(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && saveTime()}
                   placeholder="00"
@@ -405,30 +455,19 @@ export default function App({ initialSurfers, initialSessions, initialTimesMap }
                 <span className="text-xs text-gray-400 mt-1">seg</span>
               </div>
             </div>
-
-            <button
-              onClick={saveTime}
-              disabled={saving}
-              className="w-full bg-black text-white font-bold py-3 rounded-xl mb-2 text-base disabled:opacity-50 transition-opacity"
-              style={{ fontFamily: "'Barlow Condensed', sans-serif", letterSpacing: 1 }}
-            >
+            <button onClick={saveTime} disabled={saving}
+              className="w-full bg-black text-white font-bold py-3 rounded-xl mb-2 text-base disabled:opacity-50"
+              style={{ fontFamily: "'Barlow Condensed', sans-serif", letterSpacing: 1 }}>
               {saving ? "Guardando..." : "Guardar"}
             </button>
-
             {timesMap[modal.surferName]?.[modal.sessionName] && (
-              <button
-                onClick={clearTime}
-                disabled={saving}
-                className="w-full border border-red-200 text-red-500 font-semibold py-2 rounded-xl mb-2 text-sm"
-              >
+              <button onClick={clearTime} disabled={saving}
+                className="w-full border border-red-200 text-red-500 font-semibold py-2 rounded-xl mb-2 text-sm">
                 Borrar tiempo
               </button>
             )}
-
-            <button
-              onClick={() => setModal(null)}
-              className="w-full border border-gray-200 text-gray-400 font-semibold py-2 rounded-xl text-sm"
-            >
+            <button onClick={() => setModal(null)}
+              className="w-full border border-gray-200 text-gray-400 font-semibold py-2 rounded-xl text-sm">
               Cancelar
             </button>
           </div>
@@ -440,21 +479,14 @@ export default function App({ initialSurfers, initialSessions, initialTimesMap }
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => setShowAddSession(false)}>
           <div className="bg-white rounded-2xl p-6 w-full max-w-xs shadow-2xl" onClick={(e) => e.stopPropagation()}>
             <p className="font-bold text-xl mb-1" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>Nueva sesión</p>
-            <p className="text-sm text-gray-400 mb-4">Ej: Junio '26, Diciembre '26</p>
-            <input
-              autoFocus
-              value={newSessionName}
-              onChange={(e) => setNewSessionName(e.target.value)}
+            <p className="text-sm text-gray-400 mb-4">Ej: Agosto '26, Diciembre '26</p>
+            <input autoFocus value={newSessionName} onChange={(e) => setNewSessionName(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && addSession()}
               placeholder="Nombre de la sesión"
               className="w-full border-2 border-gray-200 rounded-xl px-3 py-3 text-base mb-4 outline-none focus:border-black transition-colors"
             />
-            <button onClick={addSession} className="w-full bg-black text-white font-bold py-3 rounded-xl mb-2" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
-              Crear
-            </button>
-            <button onClick={() => setShowAddSession(false)} className="w-full border border-gray-200 text-gray-400 font-semibold py-2 rounded-xl text-sm">
-              Cancelar
-            </button>
+            <button onClick={addSession} className="w-full bg-black text-white font-bold py-3 rounded-xl mb-2" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>Crear</button>
+            <button onClick={() => setShowAddSession(false)} className="w-full border border-gray-200 text-gray-400 font-semibold py-2 rounded-xl text-sm">Cancelar</button>
           </div>
         </div>
       )}
@@ -464,18 +496,73 @@ export default function App({ initialSurfers, initialSessions, initialTimesMap }
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => setShowAddSurfer(false)}>
           <div className="bg-white rounded-2xl p-6 w-full max-w-xs shadow-2xl" onClick={(e) => e.stopPropagation()}>
             <p className="font-bold text-xl mb-4" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>Nuevo surfer</p>
-            <input
-              autoFocus
-              value={newSurferName}
-              onChange={(e) => setNewSurferName(e.target.value)}
+            <input autoFocus value={newSurferName} onChange={(e) => setNewSurferName(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && addSurfer()}
               placeholder="Nombre completo"
               className="w-full border-2 border-gray-200 rounded-xl px-3 py-3 text-base mb-4 outline-none focus:border-black transition-colors"
             />
-            <button onClick={addSurfer} className="w-full bg-black text-white font-bold py-3 rounded-xl mb-2" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
-              Agregar
+            <button onClick={addSurfer} className="w-full bg-black text-white font-bold py-3 rounded-xl mb-2" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>Agregar</button>
+            <button onClick={() => setShowAddSurfer(false)} className="w-full border border-gray-200 text-gray-400 font-semibold py-2 rounded-xl text-sm">Cancelar</button>
+          </div>
+        </div>
+      )}
+
+      {/* ── MODAL: borrar surfer ── */}
+      {showDeleteSurfer && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => { setShowDeleteSurfer(false); setConfirmDelete(null); }}>
+          <div className="bg-white rounded-2xl p-6 w-full max-w-xs shadow-2xl" onClick={(e) => e.stopPropagation()}>
+            <p className="font-bold text-xl mb-1" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>Eliminar surfer</p>
+            <p className="text-sm text-gray-400 mb-3">Se borran también todos sus tiempos.</p>
+            <input value={deleteFilter} onChange={(e) => setDeleteFilter(e.target.value)}
+              placeholder="Buscar..."
+              className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm mb-3 outline-none focus:border-black"
+            />
+            <div className="max-h-52 overflow-y-auto flex flex-col gap-1 mb-4">
+              {filteredForDelete.map((s) => (
+                <div key={s.id}>
+                  {confirmDelete === s.name ? (
+                    <div className="flex gap-2 items-center px-3 py-2 bg-red-50 border border-red-200 rounded-xl">
+                      <span className="flex-1 text-sm font-semibold text-red-700">{s.name}</span>
+                      <button onClick={() => deleteSurfer(s.name)} disabled={saving}
+                        className="text-xs bg-red-500 text-white px-3 py-1 rounded-lg font-bold disabled:opacity-50">
+                        {saving ? "..." : "Confirmar"}
+                      </button>
+                      <button onClick={() => setConfirmDelete(null)} className="text-xs text-gray-400 px-2 py-1">✕</button>
+                    </div>
+                  ) : (
+                    <button onClick={() => setConfirmDelete(s.name)}
+                      className="w-full text-left px-3 py-2.5 rounded-xl border border-gray-100 hover:border-red-300 hover:bg-red-50 transition-all text-sm font-medium text-gray-700">
+                      {s.name}
+                    </button>
+                  )}
+                </div>
+              ))}
+            </div>
+            <button onClick={() => { setShowDeleteSurfer(false); setConfirmDelete(null); }}
+              className="w-full border border-gray-200 text-gray-400 font-semibold py-2 rounded-xl text-sm">
+              Cerrar
             </button>
-            <button onClick={() => setShowAddSurfer(false)} className="w-full border border-gray-200 text-gray-400 font-semibold py-2 rounded-xl text-sm">
+          </div>
+        </div>
+      )}
+
+      {/* ── MODAL: renombrar surfer ── */}
+      {renamingSurfer && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => setRenamingSurfer(null)}>
+          <div className="bg-white rounded-2xl p-6 w-full max-w-xs shadow-2xl" onClick={(e) => e.stopPropagation()}>
+            <p className="font-bold text-xl mb-1" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>Editar nombre</p>
+            <p className="text-sm text-gray-400 mb-4">{renamingSurfer}</p>
+            <input autoFocus value={renameVal} onChange={(e) => setRenameVal(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && renameSurfer()}
+              className="w-full border-2 border-gray-200 rounded-xl px-3 py-3 text-base mb-4 outline-none focus:border-black transition-colors"
+            />
+            <button onClick={renameSurfer} disabled={saving}
+              className="w-full bg-black text-white font-bold py-3 rounded-xl mb-2 disabled:opacity-50"
+              style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
+              {saving ? "Guardando..." : "Guardar nombre"}
+            </button>
+            <button onClick={() => setRenamingSurfer(null)}
+              className="w-full border border-gray-200 text-gray-400 font-semibold py-2 rounded-xl text-sm">
               Cancelar
             </button>
           </div>

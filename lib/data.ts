@@ -131,6 +131,44 @@ export async function addSurfer(name: string): Promise<Surfer> {
   return surfer;
 }
 
+export async function deleteSurfer(name: string): Promise<void> {
+  // Remove from surfers list
+  const surfers = await getSurfers();
+  await kv.set(SURFERS_KEY, surfers.filter((s) => s.name !== name));
+  // Remove all their times
+  const sessions = await getSessions();
+  for (const session of sessions) {
+    const key = TIME_KEY(name, session.name);
+    const pair = `${name}|${session.name}`;
+    await kv.del(key);
+    await kv.srem(ALL_TIMES_KEY, pair);
+  }
+}
+
+export async function renameSurfer(oldName: string, newName: string): Promise<void> {
+  // Update surfers list
+  const surfers = await getSurfers();
+  const updated = surfers.map((s) =>
+    s.name === oldName ? { ...s, name: newName } : s
+  );
+  await kv.set(SURFERS_KEY, updated);
+  // Migrate all times from oldName to newName
+  const sessions = await getSessions();
+  for (const session of sessions) {
+    const oldKey = TIME_KEY(oldName, session.name);
+    const oldPair = `${oldName}|${session.name}`;
+    const time = await kv.get<string>(oldKey);
+    if (time) {
+      const newKey = TIME_KEY(newName, session.name);
+      const newPair = `${newName}|${session.name}`;
+      await kv.set(newKey, time);
+      await kv.sadd(ALL_TIMES_KEY, newPair);
+      await kv.del(oldKey);
+      await kv.srem(ALL_TIMES_KEY, oldPair);
+    }
+  }
+}
+
 // ─── Sessions ────────────────────────────────────────────
 export async function getSessions(): Promise<Session[]> {
   const sessions = (await kv.get<Session[]>(SESSIONS_KEY)) ?? [];
