@@ -210,9 +210,9 @@ export default function App({ initialSurfers, initialSessions, initialTimesMap }
       return { ...s, pos };
     });
 
-  const filteredForDelete = surfers.filter((s) =>
-    s.name.toLowerCase().includes(deleteFilter.toLowerCase())
-  );
+  const filteredForDelete = [...surfers]
+    .sort((a, b) => a.name.localeCompare(b.name, "es"))
+    .filter((s) => s.name.toLowerCase().includes(deleteFilter.toLowerCase()));
 
   // ── Delta label ───────────────────────────────────────
   function DeltaLabel({ delta }: { delta: number | null }) {
