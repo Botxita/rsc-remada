@@ -296,12 +296,9 @@ export default function App({ initialSurfers, initialSessions, initialTimesMap }
                           return (
                             <td key={sess} className="px-1 py-2 text-center border-b border-gray-100">
                               {t ? (
-                                <span className={`inline-flex items-center justify-center px-2 py-1 rounded text-xs font-semibold ${
-                                  isMT ? "bg-amber-50 border border-amber-300 text-amber-800" : "bg-gray-100 border border-gray-200 text-gray-800"
-                                }`}>
+                                <span className="inline-flex items-center justify-center px-2 py-1 rounded text-xs font-semibold bg-gray-100 border border-gray-200 text-gray-800">
                                   {t}
                                   <DeltaLabel delta={delta} />
-                                  {isMT && <span className="ml-1 text-amber-500 text-xs">★</span>}
                                 </span>
                               ) : (
                                 <span className="text-gray-200 text-xs">·</span>
@@ -364,34 +361,37 @@ export default function App({ initialSurfers, initialSessions, initialTimesMap }
               </div>
             </div>
 
-            {/* Surfer list — names only, tap to register time */}
+            {/* Surfer list — sorted alpha, tap to register/edit time */}
             <div className="flex flex-col gap-2">
-              {surfers.map((surfer) => {
-                const hasTime = !!timesMap[surfer.name]?.[activeSession];
+              {sortedSurfers.map((surfer) => {
+                const t = timesMap[surfer.name]?.[activeSession];
                 return (
                   <div key={surfer.id} className="flex items-center gap-2">
-                    {/* Name tap → rename */}
+                    {/* Pencil → rename */}
                     <button
                       onClick={() => { setRenamingSurfer(surfer.name); setRenameVal(surfer.name); }}
-                      className="text-left px-3 py-3 rounded-xl border border-gray-100 bg-gray-50 text-gray-500 text-sm font-medium hover:border-gray-300 transition-all min-w-0 flex-shrink-0"
-                      style={{ maxWidth: 36 }}
+                      className="px-3 py-3 rounded-xl border border-gray-100 bg-gray-50 text-gray-400 text-sm hover:border-gray-300 transition-all flex-shrink-0"
                       title="Editar nombre"
                     >
                       ✏️
                     </button>
-                    {/* Time tap → register */}
+                    {/* Row → open time modal */}
                     <button
                       onClick={() => openModal(surfer.name, activeSession)}
                       className={`flex-1 flex items-center px-4 py-3 rounded-xl border text-left transition-all ${
-                        hasTime ? "border-black bg-white" : "border-gray-200 bg-gray-50"
+                        t ? "border-black bg-white" : "border-gray-200 bg-gray-50"
                       }`}
                     >
-                      <span className={`flex-1 font-semibold text-base ${hasTime ? "text-black" : "text-gray-400"}`}>
+                      <span className={`flex-1 font-semibold text-base ${t ? "text-black" : "text-gray-400"}`}>
                         {surfer.name}
                       </span>
-                      <span className={`text-xs font-medium ${hasTime ? "text-green-600" : "text-gray-300"}`}>
-                        {hasTime ? "✓ registrado" : "tap para registrar"}
-                      </span>
+                      {t ? (
+                        <span className="font-bold text-base text-black tracking-wide" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
+                          {t}
+                        </span>
+                      ) : (
+                        <span className="text-xs text-gray-300">tap para registrar</span>
+                      )}
                     </button>
                   </div>
                 );
