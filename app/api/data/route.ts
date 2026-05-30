@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { ensureSeeded, getSurfers, getSessions, getAllTimes } from "@/lib/data";
 
+export const dynamic = "force-dynamic";
+
 export async function GET() {
   await ensureSeeded();
   const [surfers, sessions, times] = await Promise.all([

@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { setTime } from "@/lib/data";
 
+export const dynamic = "force-dynamic";
+
 export async function POST(req: NextRequest) {
   const { surferName, sessionName, time } = await req.json();
   if (!surferName || !sessionName) {
