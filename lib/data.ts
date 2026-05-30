@@ -108,7 +108,7 @@ export async function ensureSeeded() {
       pairs.push(`${surfer}|${session}`);
     }
   }
-  if (pairs.length) await kv.sadd(ALL_TIMES_KEY, ...pairs);
+  if (pairs.length) await kv.sadd(ALL_TIMES_KEY, pairs[0], ...pairs.slice(1));
 
   await kv.set("rsc:seeded", true);
 }
