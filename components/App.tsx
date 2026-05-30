@@ -58,11 +58,11 @@ export default function App({ initialSurfers, initialSessions, initialTimesMap }
       setMMin(m);
       setMSec(s);
     } else {
-      setMMin("");
-      setMSec("");
+      setMMin("1");
+      setMSec("00");
     }
     setModal({ surferName, sessionName });
-    setTimeout(() => minRef.current?.focus(), 60);
+    setTimeout(() => secRef.current?.select(), 60);
   }
 
   // ── Save time ─────────────────────────────────────────
@@ -192,7 +192,8 @@ export default function App({ initialSurfers, initialSessions, initialTimesMap }
   }
 
   // ── Computed ──────────────────────────────────────────
-  const filteredSurfers = surfers.filter((s) =>
+  const sortedSurfers = [...surfers].sort((a, b) => a.name.localeCompare(b.name, "es"));
+  const filteredSurfers = sortedSurfers.filter((s) =>
     s.name.toLowerCase().includes(filter.toLowerCase())
   );
 
@@ -202,7 +203,12 @@ export default function App({ initialSurfers, initialSessions, initialTimesMap }
       return { ...s, best };
     })
     .filter((s) => s.best !== null)
-    .sort((a, b) => (a.best ?? 0) - (b.best ?? 0));
+    .sort((a, b) => (a.best ?? 0) - (b.best ?? 0))
+    .map((s, i, arr) => {
+      // Tied position: same time = same rank
+      const pos = arr.findIndex((x) => x.best === s.best) + 1;
+      return { ...s, pos };
+    });
 
   const filteredForDelete = surfers.filter((s) =>
     s.name.toLowerCase().includes(deleteFilter.toLowerCase())
@@ -403,20 +409,21 @@ export default function App({ initialSurfers, initialSessions, initialTimesMap }
             {rankingData.length === 0 && (
               <p className="text-gray-400 text-sm text-center py-8">No hay tiempos registrados aún.</p>
             )}
-            {rankingData.map((s, rank) => {
-              const medal = rank === 0 ? "🥇" : rank === 1 ? "🥈" : rank === 2 ? "🥉" : null;
+            {rankingData.map((s) => {
+              const p = s.pos;
+              const medal = p === 1 ? "🥇" : p === 2 ? "🥈" : p === 3 ? "🥉" : null;
               return (
                 <div key={s.id} className={`flex items-center px-4 py-3 mb-2 rounded-xl border ${
-                  rank === 0 ? "border-amber-300 bg-amber-50" :
-                  rank === 1 ? "border-gray-300 bg-gray-50" :
-                  rank === 2 ? "border-orange-200 bg-orange-50/50" :
+                  p === 1 ? "border-amber-300 bg-amber-50" :
+                  p === 2 ? "border-gray-300 bg-gray-50" :
+                  p === 3 ? "border-orange-200 bg-orange-50/50" :
                   "border-gray-100 bg-white"
                 }`}>
-                  <span className="w-8 text-center font-bold text-sm text-gray-400" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
-                    {medal ?? `#${rank + 1}`}
+                  <span className="w-10 text-center font-bold text-sm text-gray-400" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
+                    {medal ?? `#${p}`}
                   </span>
                   <span className="flex-1 font-semibold text-base ml-2 text-black">{s.name}</span>
-                  <span className={`font-bold text-lg ${rank === 0 ? "text-amber-600" : "text-black"}`} style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
+                  <span className={`font-bold text-lg ${p === 1 ? "text-amber-600" : "text-black"}`} style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
                     {s.best ? secToTime(s.best) : "—"}
                   </span>
                 </div>
