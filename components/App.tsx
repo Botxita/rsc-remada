@@ -22,6 +22,22 @@ export default function App({ initialSurfers, initialSessions, initialTimesMap }
   );
   const [filter, setFilter] = useState("");
   const [saving, setSaving] = useState(false);
+  const [isUnlocked, setIsUnlocked] = useState(false);
+  const [pwInput, setPwInput] = useState("");
+  const [pwError, setPwError] = useState(false);
+
+  const ADMIN_PASSWORD = "QQ26";
+
+  function tryUnlock() {
+    if (pwInput === ADMIN_PASSWORD) {
+      setIsUnlocked(true);
+      setPwError(false);
+      setPwInput("");
+    } else {
+      setPwError(true);
+      setPwInput("");
+    }
+  }
 
   // Time modal (sesión only)
   const [modal, setModal] = useState<{ surferName: string; sessionName: string } | null>(null);
@@ -229,11 +245,14 @@ export default function App({ initialSurfers, initialSessions, initialTimesMap }
     <div className="min-h-screen bg-white" style={{ fontFamily: "'Barlow', sans-serif" }}>
 
       {/* HEADER */}
-      <div className="border-b-2 border-black px-4 py-3">
-        <h1 style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 800, fontSize: 26, letterSpacing: 1, textTransform: "uppercase", margin: 0 }}>
-          🏄 RSC Remada
-        </h1>
-        <p className="text-xs text-gray-500 tracking-widest uppercase mt-0.5">Evaluación 100m</p>
+      <div className="px-4 py-3 flex items-center gap-3" style={{ background: "#1a2e4a" }}>
+        <img src="/logo-rsc.png" alt="RSC" style={{ width: 52, height: 52, objectFit: "contain" }} />
+        <div>
+          <h1 style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 800, fontSize: 26, letterSpacing: 2, textTransform: "uppercase", margin: 0, color: "#fff" }}>
+            RSC Remada
+          </h1>
+          <p style={{ fontSize: 11, letterSpacing: 3, textTransform: "uppercase", margin: 0, color: "#7fa8c9" }}>Evaluación 100m</p>
+        </div>
       </div>
 
       {/* TABS */}
@@ -324,7 +343,41 @@ export default function App({ initialSurfers, initialSessions, initialTimesMap }
         {/* ── TAB: SESIÓN ── */}
         {tab === "sesion" && (
           <>
-            {/* 3 action buttons */}
+            {!isUnlocked ? (
+              /* Password gate */
+              <div className="flex flex-col items-center justify-center py-16 px-6">
+                <div className="text-4xl mb-4">🔒</div>
+                <p className="font-bold text-lg mb-1" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>Acceso administrador</p>
+                <p className="text-sm text-gray-400 mb-6 text-center">Ingresá la contraseña para registrar y editar tiempos</p>
+                <input
+                  type="password"
+                  value={pwInput}
+                  onChange={(e) => { setPwInput(e.target.value); setPwError(false); }}
+                  onKeyDown={(e) => e.key === "Enter" && tryUnlock()}
+                  placeholder="Contraseña"
+                  autoFocus
+                  className={`w-full max-w-xs border-2 rounded-xl px-4 py-3 text-center text-lg mb-3 outline-none transition-colors ${
+                    pwError ? "border-red-400 bg-red-50" : "border-gray-200 focus:border-black"
+                  }`}
+                  style={{ fontFamily: "'Barlow Condensed', sans-serif", letterSpacing: 4 }}
+                />
+                {pwError && <p className="text-red-500 text-sm mb-3">Contraseña incorrecta</p>}
+                <button
+                  onClick={tryUnlock}
+                  className="w-full max-w-xs bg-black text-white font-bold py-3 rounded-xl"
+                  style={{ fontFamily: "'Barlow Condensed', sans-serif" }}
+                >
+                  Ingresar
+                </button>
+              </div>
+            ) : (
+              /* Admin content */
+              <div>
+                <div className="flex justify-end mb-3">
+                  <button onClick={() => setIsUnlocked(false)} className="text-xs text-gray-400 border border-gray-200 rounded-full px-3 py-1 hover:border-gray-400 transition-colors">
+                    🔓 Cerrar sesión admin
+                  </button>
+                </div>            {/* 3 action buttons */}
             <div className="flex gap-2 mb-4">
               <button onClick={() => setShowAddSession(true)}
                 className="flex-1 py-1.5 border border-black rounded-lg text-xs font-semibold uppercase tracking-wide hover:bg-black hover:text-white transition-all"
@@ -397,6 +450,8 @@ export default function App({ initialSurfers, initialSessions, initialTimesMap }
                 );
               })}
             </div>
+              </div>
+            )}
           </>
         )}
 
