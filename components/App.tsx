@@ -245,13 +245,13 @@ export default function App({ initialSurfers, initialSessions, initialTimesMap }
     <div className="min-h-screen bg-white" style={{ fontFamily: "'Barlow', sans-serif" }}>
 
       {/* HEADER */}
-      <div className="px-5 py-4 flex items-center gap-4" style={{ background: "#1a2e4a", borderBottom: "3px solid #f5a623" }}>
-        <img src="/logo-rsc.png" alt="RSC" style={{ width: 80, height: 80, objectFit: "contain" }} />
+      <div style={{ background: "linear-gradient(135deg, #f5a623 0%, #e8920a 100%)", borderBottom: "3px solid #c97a08", padding: "10px 20px", display: "flex", alignItems: "center", gap: 16, minHeight: 100 }}>
+        <img src="/logo-rsc.png" alt="RSC" style={{ height: 80, width: "auto", objectFit: "contain", flexShrink: 0 }} />
         <div>
-          <h1 style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 800, fontSize: 30, letterSpacing: 2, textTransform: "uppercase", margin: 0, color: "#fff" }}>
+          <h1 style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 800, fontSize: 32, letterSpacing: 2, textTransform: "uppercase", margin: 0, color: "#1a2e4a" }}>
             RSC Remada
           </h1>
-          <p style={{ fontSize: 11, letterSpacing: 3, textTransform: "uppercase", margin: 0, color: "#f5a623" }}>Evaluación 100m</p>
+          <p style={{ fontSize: 11, letterSpacing: 3, textTransform: "uppercase", margin: 0, color: "#1a2e4a", opacity: 0.7 }}>Evaluación 100m</p>
         </div>
       </div>
 
