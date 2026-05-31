@@ -245,28 +245,28 @@ export default function App({ initialSurfers, initialSessions, initialTimesMap }
     <div className="min-h-screen bg-white" style={{ fontFamily: "'Barlow', sans-serif" }}>
 
       {/* HEADER */}
-      <div className="px-4 py-3 flex items-center gap-3" style={{ background: "#1a2e4a" }}>
-        <img src="/logo-rsc.png" alt="RSC" style={{ width: 52, height: 52, objectFit: "contain" }} />
+      <div className="px-5 py-4 flex items-center gap-4" style={{ background: "#1a2e4a", borderBottom: "3px solid #f5a623" }}>
+        <img src="/logo-rsc.png" alt="RSC" style={{ width: 80, height: 80, objectFit: "contain" }} />
         <div>
-          <h1 style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 800, fontSize: 26, letterSpacing: 2, textTransform: "uppercase", margin: 0, color: "#fff" }}>
+          <h1 style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 800, fontSize: 30, letterSpacing: 2, textTransform: "uppercase", margin: 0, color: "#fff" }}>
             RSC Remada
           </h1>
-          <p style={{ fontSize: 11, letterSpacing: 3, textTransform: "uppercase", margin: 0, color: "#7fa8c9" }}>Evaluación 100m</p>
+          <p style={{ fontSize: 11, letterSpacing: 3, textTransform: "uppercase", margin: 0, color: "#f5a623" }}>Evaluación 100m</p>
         </div>
       </div>
 
       {/* TABS */}
       <div className="flex border-b border-gray-200">
-        {(["tabla", "sesion", "ranking"] as Tab[]).map((t) => (
+        {(["tabla", "ranking", "sesion"] as Tab[]).map((t) => (
           <button
             key={t}
             onClick={() => setTab(t)}
             className={`flex-1 py-5 text-lg font-bold uppercase tracking-wider transition-colors ${
-              tab === t ? "border-b-2 border-black text-black" : "text-gray-400 hover:text-black"
+              tab === t ? "border-b-2 border-amber-500 text-black" : "text-gray-400 hover:text-black"
             }`}
             style={{ fontFamily: "'Barlow Condensed', sans-serif" }}
           >
-            {t === "tabla" ? "📋 Tabla" : t === "sesion" ? "⚡ Sesión" : "🏆 Ranking"}
+            {t === "tabla" ? "📋 Tabla" : t === "ranking" ? "🏆 Ranking" : "⚡ Sesión"}
           </button>
         ))}
       </div>
@@ -294,7 +294,7 @@ export default function App({ initialSurfers, initialSessions, initialTimesMap }
                         {s}
                       </th>
                     ))}
-                    <th className="px-2 py-2 text-xs font-bold uppercase tracking-wider text-amber-600 border-b border-gray-200 text-center whitespace-nowrap">
+                    <th className="px-2 py-2 text-xs font-bold uppercase tracking-wider border-b border-gray-200 text-center whitespace-nowrap" style={{ color: "#f5a623" }}>
                       MT ★
                     </th>
                   </tr>
@@ -325,7 +325,7 @@ export default function App({ initialSurfers, initialSessions, initialTimesMap }
                             </td>
                           );
                         })}
-                        <td className="px-2 py-2 text-center border-b border-gray-100 font-bold text-amber-600 text-sm">
+                        <td className="px-2 py-2 text-center border-b border-gray-100 font-bold text-sm" style={{ color: "#f5a623" }}>
                           {best ? secToTime(best) : "—"}
                         </td>
                       </tr>
