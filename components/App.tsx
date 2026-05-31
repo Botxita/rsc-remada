@@ -245,13 +245,13 @@ export default function App({ initialSurfers, initialSessions, initialTimesMap }
     <div className="min-h-screen bg-white" style={{ fontFamily: "'Barlow', sans-serif" }}>
 
       {/* HEADER */}
-      <div style={{ background: "linear-gradient(135deg, #f5a623 0%, #e8920a 100%)", borderBottom: "3px solid #c97a08", padding: "10px 20px", display: "flex", alignItems: "center", gap: 16, minHeight: 100 }}>
-        <img src="/logo-rsc.png" alt="RSC" style={{ height: 80, width: "auto", objectFit: "contain", flexShrink: 0 }} />
+      <div style={{ background: "#fff", borderBottom: "2px solid #000", padding: "12px 20px", display: "flex", alignItems: "center", gap: 16 }}>
+        <img src="/logo-rsc.png" alt="RSC" style={{ height: 72, width: "auto", objectFit: "contain", flexShrink: 0 }} />
         <div>
-          <h1 style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 800, fontSize: 32, letterSpacing: 2, textTransform: "uppercase", margin: 0, color: "#1a2e4a" }}>
+          <h1 style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 800, fontSize: 32, letterSpacing: 2, textTransform: "uppercase", margin: 0, color: "#000" }}>
             RSC Remada
           </h1>
-          <p style={{ fontSize: 11, letterSpacing: 3, textTransform: "uppercase", margin: 0, color: "#1a2e4a", opacity: 0.7 }}>Evaluación 100m</p>
+          <p style={{ fontSize: 11, letterSpacing: 3, textTransform: "uppercase", margin: 0, color: "#666" }}>Evaluación 100m</p>
         </div>
       </div>
 
@@ -262,7 +262,7 @@ export default function App({ initialSurfers, initialSessions, initialTimesMap }
             key={t}
             onClick={() => setTab(t)}
             className={`flex-1 py-5 text-lg font-bold uppercase tracking-wider transition-colors ${
-              tab === t ? "border-b-2 border-amber-500 text-black" : "text-gray-400 hover:text-black"
+              tab === t ? "border-b-2 border-black text-black" : "text-gray-400 hover:text-black"
             }`}
             style={{ fontFamily: "'Barlow Condensed', sans-serif" }}
           >
@@ -294,7 +294,7 @@ export default function App({ initialSurfers, initialSessions, initialTimesMap }
                         {s}
                       </th>
                     ))}
-                    <th className="px-2 py-2 text-xs font-bold uppercase tracking-wider border-b border-gray-200 text-center whitespace-nowrap" style={{ color: "#f5a623" }}>
+                    <th className="px-2 py-2 text-xs font-bold uppercase tracking-wider border-b border-gray-200 text-center whitespace-nowrap text-black">
                       MT ★
                     </th>
                   </tr>
@@ -325,7 +325,7 @@ export default function App({ initialSurfers, initialSessions, initialTimesMap }
                             </td>
                           );
                         })}
-                        <td className="px-2 py-2 text-center border-b border-gray-100 font-bold text-sm" style={{ color: "#f5a623" }}>
+                        <td className="px-2 py-2 text-center border-b border-gray-100 font-bold text-sm text-black">
                           {best ? secToTime(best) : "—"}
                         </td>
                       </tr>
