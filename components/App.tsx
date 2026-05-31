@@ -283,18 +283,22 @@ export default function App({ initialSurfers, initialSessions, initialTimesMap }
               className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm mb-3 outline-none focus:border-black transition-colors"
             />
             <div className="overflow-x-auto -mx-3">
-              <table className="w-full text-sm border-collapse">
+              <table className="text-sm border-collapse" style={{ width: "max-content", minWidth: "100%" }}>
                 <thead>
                   <tr className="bg-gray-50">
-                    <th className="text-left px-3 py-2 text-xs font-bold uppercase tracking-wider text-gray-500 border-b border-gray-200 sticky left-0 bg-gray-50 z-10">
+                    {/* Nombre — fijo izquierda */}
+                    <th className="text-left px-3 py-2 text-xs font-bold uppercase tracking-wider text-gray-500 border-b border-gray-200 whitespace-nowrap bg-gray-50"
+                        style={{ position: "sticky", left: 0, zIndex: 20 }}>
                       Surfer
                     </th>
                     {sessionNames.map((s) => (
-                      <th key={s} className="px-2 py-2 text-xs font-bold uppercase tracking-wider text-gray-500 border-b border-gray-200 whitespace-nowrap text-center">
+                      <th key={s} className="px-3 py-2 text-xs font-bold uppercase tracking-wider text-gray-500 border-b border-gray-200 whitespace-nowrap text-center">
                         {s}
                       </th>
                     ))}
-                    <th className="px-2 py-2 text-xs font-bold uppercase tracking-wider border-b border-gray-200 text-center whitespace-nowrap text-black">
+                    {/* MT — fijo derecha */}
+                    <th className="px-3 py-2 text-xs font-bold uppercase tracking-wider border-b border-gray-200 text-center whitespace-nowrap text-black bg-gray-50"
+                        style={{ position: "sticky", right: 0, zIndex: 20, borderLeft: "1px solid #e5e7eb" }}>
                       MT ★
                     </th>
                   </tr>
@@ -302,18 +306,19 @@ export default function App({ initialSurfers, initialSessions, initialTimesMap }
                 <tbody>
                   {filteredSurfers.map((surfer, fi) => {
                     const best = getBestTime(surfer.name, timesMap);
+                    const rowBg = fi % 2 === 0 ? "#ffffff" : "#f9fafb";
                     return (
-                      <tr key={surfer.id} className={fi % 2 === 0 ? "bg-white" : "bg-gray-50/50"}>
-                        <td className={`px-3 py-2 font-semibold text-sm border-b border-gray-100 whitespace-nowrap sticky left-0 z-10 text-black ${fi % 2 === 0 ? "bg-white" : "bg-gray-50/50"}`}>
+                      <tr key={surfer.id} style={{ background: rowBg }}>
+                        {/* Nombre — fijo izquierda */}
+                        <td className="px-3 py-2 font-semibold text-sm border-b border-gray-100 whitespace-nowrap text-black"
+                            style={{ position: "sticky", left: 0, zIndex: 10, background: rowBg, boxShadow: "2px 0 4px -2px rgba(0,0,0,0.08)" }}>
                           {surfer.name}
                         </td>
                         {sessionNames.map((sess) => {
                           const t = timesMap[surfer.name]?.[sess];
                           const delta = getDelta(surfer.name, sess, sessionNames, timesMap);
-                          const sec = t ? timeToSec(t) : null;
-                          const isMT = sec !== null && sec === best;
                           return (
-                            <td key={sess} className="px-1 py-2 text-center border-b border-gray-100">
+                            <td key={sess} className="px-2 py-2 text-center border-b border-gray-100">
                               {t ? (
                                 <span className="inline-flex items-center justify-center px-2 py-1 rounded text-xs font-semibold bg-gray-100 border border-gray-200 text-gray-800">
                                   {t}
@@ -325,7 +330,9 @@ export default function App({ initialSurfers, initialSessions, initialTimesMap }
                             </td>
                           );
                         })}
-                        <td className="px-2 py-2 text-center border-b border-gray-100 font-bold text-sm text-black">
+                        {/* MT — fijo derecha */}
+                        <td className="px-3 py-2 text-center border-b border-gray-100 font-bold text-sm text-black"
+                            style={{ position: "sticky", right: 0, zIndex: 10, background: rowBg, borderLeft: "1px solid #e5e7eb", boxShadow: "-2px 0 4px -2px rgba(0,0,0,0.08)" }}>
                           {best ? secToTime(best) : "—"}
                         </td>
                       </tr>
